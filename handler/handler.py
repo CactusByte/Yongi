@@ -1,6 +1,4 @@
 from openai import OpenAI
-from langchain_ollama import OllamaLLM
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import os
 from dotenv import load_dotenv
 import logging
@@ -12,18 +10,15 @@ logger = logging.getLogger(__name__)
 class YonguiHandler:
     def __init__(self):
         try:
-            # Initialize OpenAI client for embeddings
-            self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            # Validate OpenAI API key
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if not openai_api_key:
+                raise ValueError("OPENAI_API_KEY environment variable is not set")
+            
+            # Initialize OpenAI client
+            self.openai_client = OpenAI(api_key=openai_api_key)
             logger.info("OpenAI client initialized successfully")
             
-            # Initialize Ollama for chat
-            callbacks = [StreamingStdOutCallbackHandler()]
-            self.llm = OllamaLLM(
-                model="mistral",
-                callbacks=callbacks,
-                temperature=0.8
-            )
-            logger.info("Ollama LLM initialized successfully")
         except Exception as e:
             logger.error(f"Error initializing YonguiHandler: {str(e)}")
             raise
@@ -63,14 +58,22 @@ class YonguiHandler:
             6. Use the following context from your story to answer questions. Do not make up facts that are not there. If there is not enough information, say so with your shy, sweet voice.
 
             Dont make really long answers unless you are asked to expand on something.
+
             Context:
             {context}
             """
             
-            prompt = f"{system_message}\n\nHuman: {question}\n\nAssistant:"
-            response = self.llm.invoke(prompt)
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": question}
+                ],
+                temperature=0.8
+            )
+            
             logger.info("Successfully generated response")
-            return response
+            return response.choices[0].message.content
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise

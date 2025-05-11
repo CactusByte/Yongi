@@ -2,9 +2,15 @@ from fastapi import FastAPI
 from routes.routes import router
 import os
 from dotenv import load_dotenv
+import logging
+from logging_config import setup_logging
 
 # Load environment variables
 load_dotenv()
+
+# Setup logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 # Validate required environment variables
 required_env_vars = [
@@ -18,7 +24,9 @@ required_env_vars = [
 
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 if missing_vars:
-    raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
+    error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
+    logger.error(error_msg)
+    raise EnvironmentError(error_msg)
 
 app = FastAPI(
     title="Yongui API",
