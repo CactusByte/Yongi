@@ -16,6 +16,10 @@ class ChatResponse(BaseModel):
     answer: str
     context: List[str]
 
+@router.get("/")
+async def read_root():
+    return {"message": "Hello World"}
+
 @router.post("/chat")
 async def chat(request: ChatRequest):
     try:
